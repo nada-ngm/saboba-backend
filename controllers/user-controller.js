@@ -7,18 +7,22 @@ const getAllWorkers = async (req, res) => {
         const workers = await User.find({role: "worker"})
         const workersData = workers.map(worker=>{
             return {
+                _id: worker._id,
                 firstName: worker.firstName,
                 lastName: worker.lastName,
                 email: worker.email,
                 role: worker.role,
                 phone: worker.phone,
+                location: worker.location,
                 profileImage: worker.profileImage,
                 bio: worker.bio,
                 skills: worker.skills,
                 experience: worker.experience,
                 availability: worker.availability,
                 workedJobs: worker.workedJobs,
-                isActive: worker.isActive
+                isActive: worker.isActive,
+                createdAt: worker.createdAt,
+                updatedAt: worker.updatedAt
             }
         })
 
@@ -42,6 +46,7 @@ const getAllEmployers = async (req, res) => {
         const employers = await User.find({role: "employer"})
         const employersData = employers.map(employer=>{
             return {
+                _id: employer._id,
                 firstName: employer.firstName,
                 lastName: employer.lastName,
                 email: employer.email,
@@ -49,7 +54,10 @@ const getAllEmployers = async (req, res) => {
                 phone: employer.phone,
                 profileImage: employer.profileImage,
                 bio: employer.bio,
-                isActive: employer.isActive
+                location: employer.location,
+                isActive: employer.isActive,
+                createdAt: employer.createdAt,
+                updatedAt: employer.updatedAt
             }
         })
 
@@ -89,13 +97,17 @@ const getUsersById = async (req, res) => {
                 email: user.email,
                 role: user.role,
                 phone: user.phone,
+                location: user.location,
                 profileImage: user.profileImage,
                 bio: user.bio,
                 skills: user.skills,
                 experience: user.experience,
                 availability: user.availability,
                 workedJobs: user.workedJobs,
-                isActive: user.isActive
+                isActive: user.isActive,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt
+                
             }
         }else if(user.role === "employer"){
             userData = {
@@ -104,9 +116,12 @@ const getUsersById = async (req, res) => {
                 email: user.email,
                 role: user.role,
                 phone: user.phone,
+                location: user.location,
                 profileImage: user.profileImage,
                 bio: user.bio,
-                isActive: user.isActive
+                isActive: user.isActive,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt
             }    
         }
 
@@ -148,6 +163,16 @@ const updateWorker = async (req, res) => {
                 status: "fail",
                 message: "Forbidden to update these fields"
             })
+        }
+
+        if("skills" in req.body){
+
+            if(Array.isArray(req.body.skills)){
+                req.body.skills = req.body.skills
+            }else{
+                req.body.skills = [req.body.skills]
+            }
+
         }
 
         let oldImage = "default-profile-picture.webp"

@@ -55,4 +55,12 @@ router.
         applicationController.acceptApplication
     )
 
+router.
+    route("/worker/:workerId")
+    .get(
+        authenticationMiddleware,
+        authorizationMiddleware("worker"),
+        applicationController.getAllWorkerApplications
+    )
+
 module.exports = router

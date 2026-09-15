@@ -1,5 +1,6 @@
 const Application = require("../models/application-model")
 const Job = require("../models/job-model")
+const User = require("../models/user-model")
 const deleteUploadedFile = require("../utils/delete-uploaded-file")
 
 const getAllApplications = async (req, res) => {
@@ -22,7 +23,7 @@ const getAllApplications = async (req, res) => {
 
 const getApplicationById = async (req, res) => {
     try{
-        const application = await Application.findOne(req.params.id).populate("job").populate("worker")
+        const application = await Application.findById(req.params.id).populate("job").populate("worker")
 
         if(!application){
             return res.status(404).json({
@@ -33,7 +34,7 @@ const getApplicationById = async (req, res) => {
 
         if(req.userRole !== "admin" &&
             application.job.employer.toString() !== req.userId &&
-            application.worker.toString() !== req.userId
+            application.worker._id.toString() !== req.userId
         ){
             return res.status(403).json({
                 status: "fail",
@@ -56,7 +57,7 @@ const getApplicationById = async (req, res) => {
 
 const getAllJobApplications = async (req, res) => {
     try{
-        const job = await Job.findOne(req.params.jobId)
+        const job = await Job.findById(req.params.jobId)
         if(!job){
             return res.status(404).json({
                 status: "fail",
@@ -84,6 +85,46 @@ const getAllJobApplications = async (req, res) => {
         res.status(500).json({
             status: "fail",
             message: `Error fetching job's applications: ${err.message} `
+        })
+    }
+}
+
+const getAllWorkerApplications = async (req, res) => {
+    try{
+        const worker = await User.findOne({
+            _id: req.params.workerId,
+            role: "worker"
+        })
+
+        if(!worker){
+            return res.status(404).json({
+                status: "fail",
+                message: "Worker not found"
+            })
+        }
+        if(req.userRole !== "admin" &&
+            worker._id.toString() !== req.userId
+        ){
+            return res.status(403).json({
+                status: "fail",
+                message: "forbidden"
+            })
+        }
+
+        const applications = await Application.find({
+            worker: req.params.workerId
+        }).populate("job")
+
+        res.status(200).json({
+            status: "success",
+            count: applications.length,
+            data: {applications}
+        })
+
+    }catch(err){
+        res.status(500).json({
+            status: "fail",
+            message: `Error fetching Worker's applications: ${err.message} `
         })
     }
 }
@@ -323,6 +364,7 @@ module.exports = {
     getAllApplications,
     getApplicationById,
     getAllJobApplications,
+    getAllWorkerApplications,
     createApplication,
     updateApplication,
     deleteApplication,

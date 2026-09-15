@@ -1,4 +1,5 @@
 const Job = require("../models/job-model")
+const User = require("../models/user-model")
 const deleteUploadedFile = require("../utils/delete-uploaded-file")
 
 const getAllJobs = async (req, res) => {
@@ -41,12 +42,50 @@ const getJobById = async (req, res) => {
     }
 }
 
+const getAllEmployerJobs = async (req, res) => {
+    try{
+        const employer = await User.findOne({
+            _id: req.params.employerId,
+            role: "employer"
+        })
+
+        if(!employer){
+            return res.status(404).json({
+                status: "fail",
+                message: "Employer not found"
+            })
+        }
+
+        const jobs = await Job.find({
+            employer: req.params.employerId
+        })
+
+        res.status(200).json({
+            status: "success",
+            count: jobs.length,
+            data: {jobs}
+        })
+
+
+    }catch(err){
+        res.status(500).json({
+            status: "fail",
+            message: `Error fetching employer's jobs: ${err.message}`
+        })
+    }
+}
+
 const createJob = async (req, res) => {
     try{
+
+        const requirements = req.body.requirements
+        ? JSON.parse(req.body.requirements)
+        : [];
 
         const images = req.files?.map(file=>file.filename) || []
         const newJob = await Job.create({
             ...req.body,
+            requirements,
             employer: req.userId,
             images
         })
@@ -83,7 +122,7 @@ const UpdateJob = async (req, res) => {
             })
         }
 
-        if (req.userId !== "admin" && job.employer.toString() !== req.userId) {
+        if (req.userRole !== "admin" && job.employer.toString() !== req.userId) {
             return res.status(403).json({
                 status: "fail",
                 message: "Not allowed to make changes on this job"
@@ -95,6 +134,16 @@ const UpdateJob = async (req, res) => {
                 status: "fail",
                 message: "Forbidden to update this field"
             })
+        }
+
+        if("requirements" in req.body){
+
+            if(Array.isArray(req.body.requirements)){
+                req.body.requirements = req.body.requirements
+            }else{
+                req.body.requirements = [req.body.requirements]
+            }
+
         }
 
         let oldImages = []
@@ -146,7 +195,7 @@ const deleteJob = async (req, res) => {
             })
         }
 
-        if (req.userId !== "admin" && deletedJob.employer.toString() !== req.userId) {
+        if (req.userRole !== "admin" && deletedJob.employer.toString() !== req.userId) {
             return res.status(403).json({
                 status: "fail",
                 message: "Not allowed to delete this job"
@@ -178,6 +227,7 @@ const deleteJob = async (req, res) => {
 
 module.exports = {
     getAllJobs,
+    getAllEmployerJobs,
     getJobById,
     createJob,
     UpdateJob,

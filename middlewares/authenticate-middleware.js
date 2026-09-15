@@ -20,6 +20,8 @@ const authenticateMiddleware = (req, res, next) => {
 
         next()
     }catch(err){
+        console.log("JWT ERROR:", err)
+
         return res.status(401).json({
             status: "fail",
             message: "Invalid or expired token"

@@ -45,7 +45,7 @@ const getReviewById = async (req, res) => {
 
 const getAllWorkerReviews = async (req, res) => {
     try{
-        const worker = await User.findOneAndDelete({
+        const worker = await User.findOne({
             _id: req.params.workerId,
             role: "worker"
         })
@@ -58,6 +58,36 @@ const getAllWorkerReviews = async (req, res) => {
 
         const reviews = await Review.find({
             worker: req.params.workerId
+        }).populate("reviewer").populate("worker").populate("job")
+
+        res.status(200).json({
+            status: "success",
+            count: reviews.length,
+            data: {reviews}
+        })
+    }catch(err){
+        res.status(500).json({
+            status: "fail",
+            message: `Error fetching reviews: ${err.message}`
+        })
+    }
+}
+
+const getAllEmployerReviews = async (req, res) => {
+    try{
+        const reviewer = await User.findOne({
+            _id: req.params.employerId,
+            role: "employer"
+        })
+        if(!reviewer){
+            return res.status(404).json({
+                status: "fail",
+                message: "Reviewer not found"
+            })
+        }
+
+        const reviews = await Review.find({
+            reviewer: req.params.employerId
         }).populate("reviewer").populate("worker").populate("job")
 
         res.status(200).json({
@@ -242,6 +272,7 @@ module.exports = {
     getAllReviews,
     getReviewById,
     getAllWorkerReviews,
+    getAllEmployerReviews, 
     createReview,
     updateReview,
     deleteReview

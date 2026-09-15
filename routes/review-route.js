@@ -43,4 +43,12 @@ router.
         reviewController.createReview
     )
 
+router.
+    route("/employer/:employerId")
+    .get(
+        authenticateMiddleware,
+        authorizeMiddleware("employer"),
+        reviewController.getAllEmployerReviews
+    )
+
 module.exports = router

@@ -14,8 +14,16 @@ const signup = async (req, res) => {
     }
 
     try{
+
+        let skills =[]
+        
+        if(req.body.skills){
+            skills = JSON.parse(req.body.skills)
+        }
+
         const user = await User.create({
             ...req.body,
+            skills,
             profileImage: req.file?.filename
         })
 

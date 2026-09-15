@@ -31,4 +31,8 @@ router.
         jobController.deleteJob
     )
 
+router.
+    route("/employer/:employerId")
+    .get(jobController.getAllEmployerJobs)
+
 module.exports = router
